@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FBF3E4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ramayana">
+<title>Ramayana Reading</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="icon" href="/icon-192.png">
+<style>
+:root{
+  --paper:#FBF3E4; --card:#FFFDF8; --ink:#2B1B12; --muted:#8A7565; --line:#E9D9BD;
+  --saffron:#E8731A; --saffron-dark:#B9570C; --well:#EADBC0;
+  --udit:#1F6F78; --mum:#B03A22;
+  --serif:Georgia,"Times New Roman",serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{
+  font-family:var(--sans);color:var(--ink);font-size:20px;line-height:1.35;
+  background:
+    radial-gradient(1200px 500px at 50% -10%,#FFF9EC 0,transparent 70%),
+    var(--paper);
+  overscroll-behavior:none;
+}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.view{display:none;position:fixed;inset:0;flex-direction:column;
+  padding:max(16px,env(safe-area-inset-top)) 18px max(24px,calc(env(safe-area-inset-bottom) + 12px))}
+body[data-view=home] #home,
+body[data-view=history] #history{display:flex}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;margin-bottom:14px}
+h1{font-family:var(--serif);font-weight:700;font-size:clamp(21px,6.4vw,27px);letter-spacing:-.01em;margin:0;white-space:nowrap}
+.pill{padding:12px 18px;border-radius:999px;background:var(--card);border:2px solid var(--line);font-weight:600;font-size:18px}
+.pill:active{background:var(--well)}
+.eyebrow{margin:0 0 4px;color:var(--saffron-dark);font-size:15px;letter-spacing:.16em;font-weight:600}
+
+/* last page card */
+.last{flex:1;min-height:0;display:flex;flex-direction:column;position:relative;
+  background:var(--card);border:2px solid var(--line);border-radius:26px;padding:12px;margin-bottom:16px;
+  box-shadow:0 10px 30px -18px rgba(90,50,10,.45)}
+.last::after{ /* bookmark ribbon */
+  content:"";position:absolute;top:-2px;right:26px;width:34px;height:52px;background:var(--saffron);
+  clip-path:polygon(0 0,100% 0,100% 100%,50% 78%,0 100%);border-radius:0 0 2px 2px}
+.pic{flex:1;min-height:0;border-radius:16px;background:var(--well);overflow:hidden;display:flex}
+.pic img{width:100%;height:100%;object-fit:contain;display:block}
+.cap{padding:12px 56px 2px 4px}
+.cap b{font-size:24px;font-family:var(--serif)}
+.cap span{display:block;color:var(--muted);font-size:18px;margin-top:2px}
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  padding:24px;color:#6E5A4A;font-family:var(--serif);font-size:24px}
+.empty small{font-family:var(--sans);font-size:20px;margin-top:8px}
+
+.chip{display:inline-block;margin-top:6px;padding:4px 14px;border-radius:999px;background:#F6E4C4;color:var(--saffron-dark);font-weight:700;font-size:18px}
+
+/* the big button */
+.big{display:flex;align-items:center;justify-content:center;gap:14px;width:100%;min-height:80px;border-radius:26px;
+  background:var(--saffron);color:#fff;font-size:26px;font-weight:700;letter-spacing:.01em;
+  box-shadow:0 7px 0 var(--saffron-dark);transform:translateY(0);transition:transform .08s,box-shadow .08s}
+.big:active{transform:translateY(5px);box-shadow:0 2px 0 var(--saffron-dark)}
+.big svg{width:34px;height:34px}
+.big[disabled]{opacity:.7}
+
+/* who screen */
+.sheet{position:fixed;inset:0;z-index:50;display:none;align-items:flex-end;background:rgba(43,27,18,.55)}
+.sheet.on{display:flex}
+#confirm{z-index:60}
+.sheet-in .sub{margin:-6px 0 0;text-align:center;color:var(--muted);font-size:19px;line-height:1.3}
+.tog-row{display:flex;gap:12px}
+.tog{flex:1;min-height:72px;border-radius:22px;font-family:var(--serif);font-size:28px;font-weight:700;border:3px solid var(--line);background:var(--card);color:var(--ink)}
+.tog.sel[data-p=Udit]{background:var(--udit);border-color:var(--udit);color:#fff}
+.tog.sel[data-p=Mum]{background:var(--mum);border-color:var(--mum);color:#fff}
+.field{display:flex;align-items:center;gap:12px;background:var(--card);border:2px solid var(--line);border-radius:20px;padding:8px 8px 8px 18px}
+.field label{flex:1;font-size:19px;font-weight:600}
+.field input{width:120px;height:56px;border:0;border-radius:14px;background:var(--paper);color:var(--ink);font:700 28px var(--serif);text-align:center;outline:none}
+.field input::placeholder{color:#C9B79B;font-weight:400;font-size:20px}
+.btn2{min-height:72px;border-radius:24px;font-size:24px;font-weight:700;background:var(--saffron);color:#fff;box-shadow:0 6px 0 var(--saffron-dark)}
+.btn2.danger{background:#B3261E;box-shadow:0 6px 0 #7d1a14}
+.btn2:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.3)}
+.sheet-in{width:100%;background:var(--paper);border-radius:30px 30px 0 0;padding:26px 18px max(22px,calc(env(safe-area-inset-bottom) + 10px));display:flex;flex-direction:column;gap:16px;animation:up .2s ease-out}
+.sheet-in h2{margin:0 0 4px;text-align:center;font-family:var(--serif);font-size:30px;line-height:1.15}
+.sheet-in .cancel{padding:14px;font-size:20px;color:var(--muted);font-weight:600}
+@keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.who-btn{min-height:104px;border-radius:28px;font-family:var(--serif);font-size:36px;font-weight:700;color:#fff;
+  box-shadow:0 7px 0 rgba(0,0,0,.28)}
+.who-btn:active{transform:translateY(5px);box-shadow:0 2px 0 rgba(0,0,0,.28)}
+.who-btn[data-p=Udit]{background:var(--udit)}
+.who-btn[data-p=Mum]{background:var(--mum)}
+
+/* history */
+.back{padding:12px 18px 12px 12px}
+#list{flex:1;overflow-y:auto;margin:6px -18px 0;padding:0 18px 24px;-webkit-overflow-scrolling:touch}
+.day{font-family:var(--serif);font-size:22px;font-weight:700;margin:20px 0 10px;color:var(--ink)}
+.item{display:flex;gap:14px;position:relative;padding-bottom:16px}
+.item::before{content:"";position:absolute;left:9px;top:22px;bottom:-4px;width:3px;background:var(--line);border-radius:2px}
+.item:last-child::before{display:none}
+.dot{flex:none;width:21px;height:21px;border-radius:50%;margin-top:4px;border:4px solid var(--paper);box-shadow:0 0 0 2px currentColor;background:currentColor;position:relative;z-index:1}
+.row{flex:1;display:flex;gap:14px;align-items:center;background:var(--card);border:2px solid var(--line);border-radius:20px;padding:10px;text-align:left;width:100%}
+.row:active{background:var(--well)}
+.row img{width:84px;height:104px;object-fit:cover;border-radius:12px;background:var(--well);flex:none}
+.who-name{font-family:var(--serif);font-weight:700;font-size:24px}
+.when{color:var(--muted);font-size:18px}
+.end{text-align:center;color:var(--muted);font-size:18px;padding:18px 0}
+
+/* full-screen viewer */
+#viewer{display:none;position:fixed;inset:0;z-index:30;background:#1c130d;overflow:auto;-webkit-overflow-scrolling:touch;padding-bottom:170px}
+.vbar{position:fixed;left:0;right:0;bottom:0;z-index:2;display:flex;flex-direction:column;gap:10px;padding:34px 14px max(14px,env(safe-area-inset-bottom));background:linear-gradient(transparent,rgba(28,19,13,.94) 45%)}
+.vinfo{color:#fff;text-align:center;font-size:19px;font-weight:600}
+.vrow{display:flex;gap:12px}
+.vrow button{flex:1;min-height:60px;border-radius:20px;font-weight:700;font-size:21px;background:rgba(255,255,255,.93);color:var(--ink)}
+.vrow .del{color:#B3261E}
+#viewer.on{display:block}
+#viewer img{display:block;width:100%;height:auto;min-height:60dvh;object-fit:contain}
+#viewer .close{position:fixed;top:max(12px,env(safe-area-inset-top));right:14px;z-index:2;padding:12px 20px;border-radius:999px;background:rgba(255,255,255,.92);font-weight:700;font-size:20px}
+
+/* editor */
+#editor{display:none;position:fixed;inset:0;z-index:20;background:#1c130d;color:#fff;flex-direction:column;
+  padding:max(12px,env(safe-area-inset-top)) 14px max(16px,env(safe-area-inset-bottom))}
+#editor.on{display:flex}
+.ed-top{display:flex;align-items:center;gap:12px;min-height:56px}
+.ed-top .x{padding:12px 18px;border-radius:999px;background:rgba(255,255,255,.14);font-weight:600;font-size:18px}
+.ed-top p{margin:0;flex:1;font-size:20px;line-height:1.25;font-weight:600}
+.ed-top p small{display:block;font-weight:600;font-size:15px;opacity:.75;letter-spacing:.04em;margin-bottom:2px}
+#stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;margin:10px 0}
+#wrap{position:relative;touch-action:none}
+#wrap canvas{position:absolute;inset:0;width:100%;height:100%;border-radius:10px}
+#ov{touch-action:none;cursor:crosshair}
+.doha{display:flex;align-items:center;gap:12px;margin-bottom:12px;background:rgba(255,255,255,.1);border-radius:20px;padding:8px 8px 8px 18px}
+.doha label{flex:1;font-size:19px;font-weight:600;line-height:1.2}
+.doha label small{display:block;font-weight:400;opacity:.7;font-size:15px}
+.doha input{width:120px;height:56px;border:0;border-radius:14px;background:#FFFDF8;color:var(--ink);font:700 28px var(--serif);text-align:center;outline:none}
+.doha input::placeholder{color:#C9B79B;font-weight:400;font-size:20px}
+.ed-bot{display:flex;gap:12px}
+.undo{min-width:112px;min-height:80px;border-radius:26px;background:rgba(255,255,255,.14);font-weight:700;font-size:22px}
+.undo[disabled]{opacity:.35}
+.ed-bot .big{flex:1}
+.err{display:none;background:#7d2012;color:#fff;border-radius:16px;padding:12px 16px;margin-bottom:10px;font-size:18px}
+.err.on{display:block}
+
+/* saved */
+#done{display:none;position:fixed;inset:0;z-index:40;background:var(--saffron);color:#fff;align-items:center;justify-content:center;flex-direction:column;gap:14px;font-family:var(--serif);font-size:38px;font-weight:700}
+#done.on{display:flex}
+#done svg{width:96px;height:96px}
+</style>
+</head>
+<body data-view="home">
+
+<!-- Home -->
+<section class="view" id="home">
+  <p class="eyebrow">॥ श्रीराम ॥</p>
+  <div class="top">
+    <h1>Ramayana Reading</h1>
+    <button class="pill" id="open-history">History</button>
+  </div>
+  <div id="last" class="last"></div>
+  <button class="big" id="add">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.6-2.4h6.8L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.6"/></svg>
+    Add my page
+  </button>
+  <input class="sr" id="file" type="file" accept="image/*">
+</section>
+
+<!-- History -->
+<section class="view" id="history">
+  <div class="top">
+    <button class="pill back" id="back">&larr; Back</button>
+    <h1>History</h1>
+    <span style="width:84px"></span>
+  </div>
+  <div id="list"></div>
+</section>
+
+<!-- Editor -->
+<section id="editor">
+  <div class="ed-top">
+    <button class="x" id="cancel">Cancel</button>
+    <p><small id="as"></small>Draw a line where you stopped</p>
+  </div>
+  <div id="stage"><div id="wrap"><canvas id="base"></canvas><canvas id="ov"></canvas></div></div>
+  <div class="doha"><label for="doha">Doha number<small>Optional</small></label><input id="doha" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="e.g. 112" autocomplete="off"></div>
+  <div class="err" id="err">Could not save. Please check the internet and try again.</div>
+  <div class="ed-bot">
+    <button class="undo" id="undo" disabled>Undo</button>
+    <button class="big" id="save">Save</button>
+  </div>
+</section>
+
+<div id="sheet" class="sheet" role="dialog" aria-modal="true" aria-label="Who is adding this page?">
+  <div class="sheet-in">
+    <h2>Who is adding this page?</h2>
+    <button class="who-btn" data-p="Udit">Udit</button>
+    <button class="who-btn" data-p="Mum">Mum</button>
+    <button class="cancel" id="sheet-cancel">Cancel</button>
+  </div>
+</div>
+
+<div id="edit" class="sheet" role="dialog" aria-modal="true" aria-label="Edit this page">
+  <div class="sheet-in">
+    <h2>Edit this page</h2>
+    <p class="sub">Who added it?</p>
+    <div class="tog-row">
+      <button class="tog" data-p="Udit">Udit</button>
+      <button class="tog" data-p="Mum">Mum</button>
+    </div>
+    <div class="field"><label for="e-doha">Doha number</label><input id="e-doha" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="none" autocomplete="off"></div>
+    <button class="btn2" id="e-save">Save changes</button>
+    <button class="cancel" id="e-cancel">Cancel</button>
+  </div>
+</div>
+
+<div id="confirm" class="sheet" role="alertdialog" aria-modal="true">
+  <div class="sheet-in">
+    <h2 id="c-title"></h2>
+    <p class="sub" id="c-text"></p>
+    <button class="btn2" id="c-yes">Yes</button>
+    <button class="cancel" id="c-no">Go back</button>
+  </div>
+</div>
+
+<div id="viewer">
+  <button class="close" id="vclose">Close</button>
+  <img id="vimg" alt="">
+  <div class="vbar">
+    <div class="vinfo" id="vinfo"></div>
+    <div class="vrow"><button id="v-edit">Edit</button><button class="del" id="v-del">Delete</button></div>
+  </div>
+</div>
+
+<div id="done">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M7.5 12.5l3 3 6-6.5"/></svg>
+  Saved
+</div>
+
+<script>
+"use strict";
+// The two people who use this. Change names here and in src/worker.js if you ever need to.
+const PEOPLE = ["Udit", "Mum"];
+const COLORS = { Udit: "var(--udit)", Mum: "var(--mum)" };
+const FULL_MAX = 1800, THUMB_W = 480;
+
+const $ = (s) => document.querySelector(s);
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch { return null; } },
+  set(k,v){ try { localStorage.setItem(k,v); } catch {} }
+};
+
+// Optional access key, arrives once as ?k=... in the link you share.
+const sp = new URLSearchParams(location.search);
+if (sp.get("k")) { store.set("k", sp.get("k")); }
+const KEY = store.get("k") || "";
+if (KEY) $("link[rel=manifest]").href = "/manifest.webmanifest?k=" + encodeURIComponent(KEY);
+const HEAD = KEY ? { "x-key": KEY } : {};
+
+let me = null; // chosen every time a page is added
+let photos = [];
+try { photos = JSON.parse(store.get("photos") || "[]"); } catch { photos = []; }
+
+/* ---------- small helpers ---------- */
+function view(name){ document.body.dataset.view = name; }
+function el(tag, cls, text){ const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+const full = (p) => `/api/img/${p.id}/full`;
+const thumb = (p) => `/api/img/${p.id}/thumb`;
+
+const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
+function ago(t){
+  const d = Date.now() - t;
+  if (d < MIN) return "just now";
+  if (d < HOUR) { const n = Math.round(d / MIN); return n + (n === 1 ? " minute ago" : " minutes ago"); }
+  if (d < DAY) { const n = Math.round(d / HOUR); return n + (n === 1 ? " hour ago" : " hours ago"); }
+  return dayLabel(t);
+}
+function timeOnly(t){ return new Date(t).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); }
+function dayLabel(t){
+  const d = new Date(t), now = new Date();
+  const start = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const diff = Math.round((start(now) - start(d)) / DAY);
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Yesterday";
+  return d.toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" });
+}
+
+/* ---------- who is adding? (asked every single time) ---------- */
+const sheet = $("#sheet");
+$("#add").addEventListener("click", () => sheet.classList.add("on"));
+$("#sheet-cancel").addEventListener("click", () => sheet.classList.remove("on"));
+sheet.addEventListener("click", (e) => { if (e.target === sheet) sheet.classList.remove("on"); });
+document.querySelectorAll(".who-btn").forEach((b) => b.addEventListener("click", () => {
+  me = b.dataset.p;
+  sheet.classList.remove("on");
+  $("#file").click(); // straight on to the camera or gallery
+}));
+
+/* ---------- home ---------- */
+function renderHome(){
+  const box = $("#last");
+  box.textContent = "";
+  const p = photos[0];
+  if (!p) {
+    const e = el("div", "empty", "No page yet.");
+    e.append(el("small", "", "Tap the button below to add the first one."));
+    box.append(e);
+    return;
+  }
+  const pic = el("button", "pic");
+  pic.setAttribute("aria-label", "Open the last page");
+  const img = new Image();
+  img.alt = "The last page"; img.decoding = "async"; img.fetchPriority = "high"; img.src = full(p);
+  pic.append(img);
+  pic.addEventListener("click", () => openViewer(p));
+  const cap = el("div", "cap");
+  const b = el("b", "", p.who + " stopped here");
+  b.style.color = COLORS[p.who] || "inherit";
+  cap.append(b, el("span", "", ago(p.created_at) + " · " + timeOnly(p.created_at)));
+  if (p.doha) cap.append(el("div", "chip", "Doha " + p.doha));
+  box.append(pic, cap);
+}
+
+/* ---------- history ---------- */
+function renderHistory(){
+  const list = $("#list");
+  list.textContent = "";
+  if (!photos.length) { list.append(el("div", "end", "Nothing here yet.")); return; }
+  let lastDay = "";
+  for (const p of photos) {
+    const dl = dayLabel(p.created_at);
+    if (dl !== lastDay) { list.append(el("div", "day", dl)); lastDay = dl; }
+    const item = el("div", "item");
+    const dot = el("span", "dot"); dot.style.color = COLORS[p.who] || "var(--muted)";
+    const row = el("button", "row");
+    const img = new Image();
+    img.loading = "lazy"; img.decoding = "async"; img.alt = ""; img.src = thumb(p);
+    const txt = el("div");
+    const n = el("div", "who-name", p.who); n.style.color = COLORS[p.who] || "inherit";
+    txt.append(n, el("div", "when", timeOnly(p.created_at)));
+    if (p.doha) txt.append(el("div", "chip", "Doha " + p.doha));
+    row.append(img, txt);
+    row.addEventListener("click", () => openViewer(p));
+    item.append(dot, row);
+    list.append(item);
+  }
+  list.append(el("div", "end", "That is everything."));
+}
+$("#open-history").addEventListener("click", () => { renderHistory(); view("history"); });
+$("#back").addEventListener("click", () => { renderHome(); view("home"); });
+
+/* ---------- viewer ---------- */
+let viewing = null;
+function info(p){ return p.who + (p.doha ? " · Doha " + p.doha : "") + " · " + dayLabel(p.created_at) + ", " + timeOnly(p.created_at); }
+function openViewer(p){ viewing = p; $("#vimg").src = full(p); $("#vinfo").textContent = info(p); $("#viewer").classList.add("on"); }
+function rerender(){ renderHome(); if (document.body.dataset.view === "history") renderHistory(); }
+function saveCache(){ store.set("photos", JSON.stringify(photos.slice(0, 60))); }
+
+// One yes/no question box, used before anything is changed or removed.
+function ask({ title, text, yes, danger }){
+  return new Promise((resolve) => {
+    $("#c-title").textContent = title;
+    $("#c-text").textContent = text;
+    const y = $("#c-yes"), n = $("#c-no"), box = $("#confirm");
+    y.textContent = yes; y.classList.toggle("danger", !!danger);
+    box.classList.add("on");
+    const done = (v) => { box.classList.remove("on"); y.onclick = n.onclick = null; resolve(v); };
+    y.onclick = () => done(true);
+    n.onclick = () => done(false);
+  });
+}
+
+// Delete (asks first)
+$("#v-del").addEventListener("click", async () => {
+  if (!viewing) return;
+  const ok = await ask({
+    title: "Delete this page?",
+    text: "It will be removed from the timeline for both of you. This cannot be undone.",
+    yes: "Yes, delete", danger: true
+  });
+  if (!ok) return;
+  try {
+    const r = await fetch("/api/photos/" + viewing.id, { method: "DELETE", headers: HEAD });
+    if (!r.ok && r.status !== 404) throw new Error("delete failed");
+    photos = photos.filter((x) => x.id !== viewing.id);
+    saveCache();
+    viewing = null;
+    $("#viewer").classList.remove("on");
+    rerender();
+  } catch { alert("Could not delete. Please check the internet and try again."); }
+});
+
+// Edit who added it and the Doha number (asks first)
+let editWho = null;
+function syncTog(){ document.querySelectorAll(".tog").forEach((b) => b.classList.toggle("sel", b.dataset.p === editWho)); }
+$("#v-edit").addEventListener("click", () => {
+  if (!viewing) return;
+  editWho = viewing.who; syncTog();
+  $("#e-doha").value = viewing.doha || "";
+  $("#edit").classList.add("on");
+});
+document.querySelectorAll(".tog").forEach((b) => b.addEventListener("click", () => { editWho = b.dataset.p; syncTog(); }));
+$("#e-doha").addEventListener("input", (e) => { e.target.value = e.target.value.replace(/\D/g, "").slice(0, 4); });
+$("#e-cancel").addEventListener("click", () => $("#edit").classList.remove("on"));
+$("#edit").addEventListener("click", (e) => { if (e.target === $("#edit")) $("#edit").classList.remove("on"); });
+$("#e-save").addEventListener("click", async () => {
+  if (!viewing) return;
+  const doha = $("#e-doha").value.trim();
+  if (editWho === viewing.who && doha === (viewing.doha || "")) { $("#edit").classList.remove("on"); return; }
+  const ok = await ask({
+    title: "Save these changes?",
+    text: "Added by " + editWho + (doha ? ", Doha " + doha : ", no Doha number"),
+    yes: "Yes, save"
+  });
+  if (!ok) return;
+  try {
+    const r = await fetch("/api/photos/" + viewing.id, {
+      method: "PATCH",
+      headers: Object.assign({ "content-type": "application/json" }, HEAD),
+      body: JSON.stringify({ who: editWho, doha })
+    });
+    if (!r.ok) throw new Error("save failed");
+    const row = await r.json();
+    const i = photos.findIndex((x) => x.id === row.id);
+    if (i >= 0) photos[i] = row;
+    viewing = row;
+    saveCache();
+    $("#vinfo").textContent = info(row);
+    $("#edit").classList.remove("on");
+    rerender();
+  } catch { alert("Could not save the changes. Please check the internet and try again."); }
+});
+$("#vclose").addEventListener("click", () => { $("#viewer").classList.remove("on"); });
+
+/* ---------- load the timeline ---------- */
+async function refresh(){
+  try {
+    const r = await fetch("/api/photos?limit=60", { headers: HEAD });
+    if (!r.ok) return;
+    photos = (await r.json()).photos || [];
+    store.set("photos", JSON.stringify(photos.slice(0, 60)));
+    renderHome();
+    if (document.body.dataset.view === "history") renderHistory();
+  } catch {}
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
+
+/* ---------- editor: pick a photo, draw where you stopped, save ---------- */
+const base = $("#base"), ov = $("#ov"), wrap = $("#wrap");
+const bctx = base.getContext("2d"), octx = ov.getContext("2d");
+let W = 0, H = 0, strokes = [], cur = null, busy = false;
+
+async function loadBitmap(file){
+  try { return await createImageBitmap(file, { imageOrientation: "from-image" }); }
+  catch {
+    const url = URL.createObjectURL(file);
+    const img = new Image(); img.src = url; await img.decode();
+    return img;
+  }
+}
+
+$("#file").addEventListener("change", async (e) => {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  if (!me) return;
+  try {
+    const bmp = await loadBitmap(file);
+    const sw = bmp.width, sh = bmp.height;
+    const s = Math.min(1, FULL_MAX / Math.max(sw, sh));
+    W = Math.round(sw * s); H = Math.round(sh * s);
+    base.width = ov.width = W; base.height = ov.height = H;
+    bctx.drawImage(bmp, 0, 0, W, H);
+    if (bmp.close) bmp.close();
+    strokes = []; cur = null;
+    octx.clearRect(0, 0, W, H);
+    $("#undo").disabled = true;
+    $("#doha").value = "";
+    $("#as").textContent = me + " is adding this page";
+    $("#err").classList.remove("on");
+    setBusy(false);
+    $("#editor").classList.add("on");
+    fit();
+  } catch {
+    alert("Sorry, that photo could not be opened. Please try another.");
+  }
+});
+
+function fit(){
+  const st = $("#stage");
+  const aw = st.clientWidth, ah = st.clientHeight;
+  if (!W || !aw || !ah) return;
+  const s = Math.min(aw / W, ah / H);
+  wrap.style.width = Math.floor(W * s) + "px";
+  wrap.style.height = Math.floor(H * s) + "px";
+}
+addEventListener("resize", fit);
+addEventListener("orientationchange", () => setTimeout(fit, 250));
+
+function pt(e){
+  const r = ov.getBoundingClientRect();
+  return [(e.clientX - r.left) * W / r.width, (e.clientY - r.top) * H / r.height];
+}
+function paint(){
+  octx.clearRect(0, 0, W, H);
+  octx.lineCap = "round"; octx.lineJoin = "round";
+  octx.lineWidth = Math.max(W, H) * 0.028;
+  octx.strokeStyle = "rgba(255,72,48,0.5)";
+  for (const s of strokes) {
+    octx.beginPath();
+    octx.moveTo(s[0][0], s[0][1]);
+    if (s.length === 1) octx.lineTo(s[0][0] + 0.01, s[0][1]);
+    for (let i = 1; i < s.length; i++) octx.lineTo(s[i][0], s[i][1]);
+    octx.stroke();
+  }
+}
+ov.addEventListener("pointerdown", (e) => {
+  if (busy) return;
+  ov.setPointerCapture(e.pointerId);
+  cur = [pt(e)]; strokes.push(cur); paint();
+  $("#undo").disabled = false;
+});
+ov.addEventListener("pointermove", (e) => { if (cur) { cur.push(pt(e)); paint(); } });
+const end = () => { cur = null; };
+ov.addEventListener("pointerup", end);
+ov.addEventListener("pointercancel", end);
+$("#undo").addEventListener("click", () => {
+  strokes.pop(); paint(); $("#undo").disabled = strokes.length === 0;
+});
+$("#doha").addEventListener("input", (e) => { e.target.value = e.target.value.replace(/\D/g, "").slice(0, 4); });
+$("#cancel").addEventListener("click", () => { if (!busy) $("#editor").classList.remove("on"); });
+
+function setBusy(b){
+  busy = b;
+  const s = $("#save");
+  s.disabled = b;
+  s.textContent = b ? "Saving…" : "Save";
+  $("#undo").disabled = b || strokes.length === 0;
+}
+const toBlob = (c, q) => new Promise((res) => c.toBlob(res, "image/jpeg", q));
+
+$("#save").addEventListener("click", async () => {
+  if (busy) return;
+  setBusy(true);
+  $("#err").classList.remove("on");
+  try {
+    // Burn the marker into the photo.
+    const out = document.createElement("canvas");
+    out.width = W; out.height = H;
+    const c = out.getContext("2d");
+    c.drawImage(base, 0, 0); c.drawImage(ov, 0, 0);
+    const tw = Math.min(THUMB_W, W), th = Math.round(H * tw / W);
+    const small = document.createElement("canvas");
+    small.width = tw; small.height = th;
+    small.getContext("2d").drawImage(out, 0, 0, tw, th);
+    const [fullBlob, thumbBlob] = await Promise.all([toBlob(out, 0.8), toBlob(small, 0.72)]);
+
+    const fd = new FormData();
+    fd.append("who", me);
+    const dv = $("#doha").value.trim();
+    if (dv) fd.append("doha", dv);
+    fd.append("full", fullBlob, "full.jpg");
+    fd.append("thumb", thumbBlob, "thumb.jpg");
+    const r = await fetch("/api/photos", { method: "POST", body: fd, headers: HEAD });
+    if (!r.ok) throw new Error("upload failed");
+    const p = await r.json();
+
+    photos.unshift(p);
+    store.set("photos", JSON.stringify(photos.slice(0, 60)));
+    renderHome(); view("home");
+    $("#editor").classList.remove("on");
+    setBusy(false);
+    const d = $("#done"); d.classList.add("on");
+    setTimeout(() => d.classList.remove("on"), 1100);
+  } catch {
+    setBusy(false);
+    $("#err").classList.add("on");
+  }
+});
+
+/* ---------- start ---------- */
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
+renderHome();
+view("home");
+refresh();
+</script>
+</body>
+</html>
